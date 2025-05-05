@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\client",
+    "\\client\\src",
+    "\\client\\src\\components",
+    "\\client\\src\\components\\home",
+    "\\client\\src\\components\\layout",
+    "\\client\\src\\components\\tokens",
+    "\\client\\src\\context",
+    "\\client\\src\\data",
+    "\\client\\src\\pages"
+  ],
+  "PreviewInSolutionExplorer": false
+}
