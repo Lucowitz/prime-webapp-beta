@@ -18,8 +18,12 @@ const Button = ({ variant, size, onClick, children }) => {
   );
 };
 
+interface HeaderProps {
+  onLogout?: () => void;
+  isAuthenticated: boolean;
+}
 
-const Header = () => {
+const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { t, language, setLanguage } = useLanguage();
@@ -127,13 +131,14 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <a
+              !isAuthenticated && <Link
                 href="/auth-page"
                 className="hidden md:inline-block bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] px-5 py-2 rounded-md font-medium text-sm transition-all"
               >
                 {t("nav.login")}
-              </a>
+              </Link>
             )}
+            {isAuthenticated && <Button onClick={onLogout}>Logout</Button>}
 
             {/* Mobile menu button */}
             <button

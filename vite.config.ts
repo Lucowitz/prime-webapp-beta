@@ -25,6 +25,15 @@ export default defineConfig({
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
+  server: { // Add this server configuration
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000', // Your Express server
+        changeOrigin: true, // Needed for some servers
+        rewrite: (path) => path.replace(/^\/api/, ''), // Remove /api prefix
+      },
+    },
+  },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),

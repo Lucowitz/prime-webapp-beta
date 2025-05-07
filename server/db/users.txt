@@ -1,0 +1,1 @@
+{"id":"d7f47d43-d155-4936-a352-db1a45dd867f","isBusiness":false,"nome":"Gabriele","cognome":"Manzoni","indirizzo":"via brighenti 11","codiceFiscale":"MNZGRL08H06F205N","email":"fgamervisa@gmail.com","numeroTelefono":"3480013269","hashedPassword":"asdfghjkl","totpSecret":"PBPB6J2KG5RWY7ZZ"}
