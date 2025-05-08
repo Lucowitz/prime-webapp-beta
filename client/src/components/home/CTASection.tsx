@@ -41,7 +41,7 @@ const CTASection = () => {
                 {t("cta.users.desc")}
               </p>
               <Link 
-                to ="/login" 
+                to ="/auth-page#register" 
                 className="inline-block px-6 py-3 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium transition-colors w-full text-center"
               >
                 {t("cta.users.button")}
