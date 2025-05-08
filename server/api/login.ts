@@ -78,6 +78,7 @@ router.post('/', loginValidationRules, async (req: Request, res: Response) => {
     });
 
     res.status(200).json({ message: 'Login successful', token: token });
+    console.log(`User ${user.codiceFiscale} logged in successfully.`);
 });
 
 export default router;
