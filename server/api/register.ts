@@ -75,7 +75,7 @@ router.post('/', registerValidationRules, async (req: Request, res: Response) =>
       numeroTelefono: userData["Numero di Telefono"] ? userData["Numero di Telefono"].trim() : undefined,
     };
   }
-  const hashedPassword = Password; // Store password in plaintext
+  const hashedPassword = Password.trim(); // Store password in plaintext
 
   const totpSecret = authenticator.generateSecret();
 

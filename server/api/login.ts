@@ -52,7 +52,7 @@ router.post('/', loginValidationRules, async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Invalid Codice Fiscale/P.IVA' });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.hashedPassword);
+    const passwordMatch = (password.trim() === user.hashedPassword.trim());
 
     if (!passwordMatch) {
         return res.status(401).json({ message: 'Invalid password' });

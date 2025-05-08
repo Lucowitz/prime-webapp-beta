@@ -1,0 +1,2 @@
+{"id":"0e2353bd-dd0d-4205-9952-618f527b18a6","isBusiness":false,"nome":"Fede","cognome":"Lelli","indirizzo":"via della spiga","codiceFiscale":"ASDFGHJKLZXCVBNM","email":"kiccho93@hotmail.it","numeroTelefono":"3489013960","hashedPassword":"federico93.","totpSecret":"A5YQCZA3OYUQG72V"}
+{"id":"ce88057d-5e65-417b-9aec-882b30148f34","isBusiness":false,"nome":"Gabriele","cognome":"Manzoni","indirizzo":"via brighenti 11","codiceFiscale":"MNZGRL08H06F205N","email":"fgamervisa@gmail.com","numeroTelefono":"3480013269","hashedPassword":"asdfghjkl","totpSecret":"LZ2EWN2ZP4RFA4KR"}

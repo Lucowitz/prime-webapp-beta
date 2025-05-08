@@ -48,7 +48,6 @@ const AuthedApp = () => {
                     <Route path="/authed/token-explorer" element={<TokenExplorer />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
-                <button onClick={handleLogout}>Logout</button>
             </main>
             <Footer />
         </>

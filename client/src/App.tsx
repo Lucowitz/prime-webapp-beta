@@ -45,6 +45,8 @@ function AppContent() {
   useEffect(() => {
     if (isAuthenticated && window.location.pathname === '/auth-page') {
       navigate('/authed'); // Redirect to authed if authenticated and on auth page
+    } else if (!isAuthenticated && window.location.pathname !== '/auth-page') {
+      navigate('/auth-page'); // Redirect to auth-page if not authenticated and not already on auth-page
     }
   }, [isAuthenticated, navigate]);
 
