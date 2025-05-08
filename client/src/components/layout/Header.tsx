@@ -1,22 +1,11 @@
+// client/src/components/layout/Header.tsx
+
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Importato useNavigate
 import PrimeGenesisLogo from "@/assets/icons/PrimeGenesisLogo";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDemo } from "@/context/DemoContext";
-
-const Button = ({ variant, size, onClick, children }) => {
-  // Placeholder button component.  Replace with your actual Button component.
-  return (
-    <button
-      onClick={onClick}
-      className={`px-2 py-1 rounded ${
-        variant === "outline" ? "border border-gray-300" : "bg-blue-500 text-white"
-      } ${size === "sm" ? "text-xs" : "text-sm"}`}
-    >
-      {children}
-    </button>
-  );
-};
+import { Button as ShadCNButton } from "@/components/ui/button"; // Assumendo che questo sia il tuo bottone UI
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -25,9 +14,10 @@ interface HeaderProps {
 
 const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [location] = useLocation();
+  const location = useLocation(); // CORRETTO: useLocation restituisce un oggetto
+  const navigate = useNavigate(); // AGGIUNTO: per la navigazione programmatica
   const { t, language, setLanguage } = useLanguage();
-  const { isDemoMode, demoUserType, toggleDemoMode } = useDemo(); // Assumed toggleDemoMode function
+  const { isDemoMode, demoUserType, toggleDemoMode } = useDemo();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -52,7 +42,7 @@ const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
       ].filter(Boolean);
 
   const isActive = (path: string) => {
-    return location === path ? "text-white" : "text-gray-300 hover:text-white";
+    return location.pathname === path ? "text-white" : "text-gray-300 hover:text-white"; // CORRETTO: usa location.pathname
   };
 
   const headerBgClass = isDemoMode
@@ -61,12 +51,17 @@ const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
       : "bg-[#0f1a2e]"
     : "bg-[#121212]";
 
+  const handleExitDemo = () => {
+    toggleDemoMode();
+    navigate("/"); // AGGIUNTO: usa navigate da react-router-dom
+  }
+
   return (
     <header className={`fixed w-full ${headerBgClass} bg-opacity-95 backdrop-blur-sm z-50 transition-all duration-300 border-b border-opacity-20 border-white`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link to="/" className="flex items-center">
             <div className="flex items-center space-x-2">
               <PrimeGenesisLogo />
               <span className="font-heading font-bold text-xl md:text-2xl text-white">Prime Genesis</span>
@@ -76,13 +71,13 @@ const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
           {/* Desktop Navigation */}
           <nav className="hidden md:block">
             <ul className="flex space-x-8">
-              {navigationLinks.map((link) => (
-                <li key={link.path}>
+              {navigationLinks.map((linkItem) => ( // Rinominato link in linkItem per evitare conflitto
+                <li key={linkItem.path}>
                   <Link
-                    href={link.path}
-                    className={`${isActive(link.path)} font-medium transition-colors`}
+                    to={linkItem.path}
+                    className={`${isActive(linkItem.path)} font-medium transition-colors`}
                   >
-                    {link.text}
+                    {linkItem.text}
                   </Link>
                 </li>
               ))}
@@ -108,7 +103,7 @@ const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
             </div>
 
             <Link
-              href="/wallet"
+              to="/wallet"
               className="hidden md:inline-block px-4 py-2 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium text-sm transition-colors"
             >
               {t("nav.wallet")}
@@ -117,28 +112,26 @@ const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
             {isDemoMode ? (
               <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-[#2A2A2A] rounded-md">
                 <div className="text-sm text-gray-300">
-                  Connected Demo Mode: {demoUserType === "company" ? "Company" : "User"}
+                  Demo: {demoUserType === "company" ? "Company" : "User"} {/* Semplificato testo */}
                 </div>
-                <Button
+                <ShadCNButton // CORRETTO: Usa il tuo componente Button UI
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    toggleDemoMode();
-                    // navigate("/");  //Requires 'navigate' function from 'wouter'
-                  }}
+                  onClick={handleExitDemo} // Usa la funzione corretta
                 >
                   Exit Demo
-                </Button>
+                </ShadCNButton>
               </div>
             ) : (
               !isAuthenticated && <Link
-                href="/auth-page"
+                to="/auth-page"
                 className="hidden md:inline-block bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] px-5 py-2 rounded-md font-medium text-sm transition-all"
               >
                 {t("nav.login")}
               </Link>
             )}
-            {isAuthenticated && <Button onClick={onLogout}>Logout</Button>}
+            {isAuthenticated && onLogout && <ShadCNButton onClick={onLogout} variant="destructive">Logout</ShadCNButton>} {/* CORRETTO: Usa il tuo componente Button UI e aggiunto check per onLogout */}
+
 
             {/* Mobile menu button */}
             <button
@@ -157,42 +150,43 @@ const Header = ({ onLogout, isAuthenticated }: HeaderProps) => {
       {/* Mobile Navigation */}
       <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`} id="mobile-menu">
         <div className="px-4 sm:px-6 lg:px-8 py-4 space-y-3 bg-[#1E1E1E] border-t border-white border-opacity-10">
-          {navigationLinks.map((link) => (
+          {navigationLinks.map((linkItem) => ( // Rinominato link in linkItem
             <Link
-              key={link.path}
-              href={link.path}
+              key={linkItem.path}
+              to={linkItem.path}
               className="block text-gray-300 hover:text-white font-medium"
               onClick={closeMobileMenu}
             >
-              {link.text}
+              {linkItem.text}
             </Link>
           ))}
           <div className="pt-2 flex items-center justify-between flex-wrap gap-2">
             <Link
-              href="/wallet"
+              to="/wallet"
               className="px-4 py-2 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium text-sm transition-colors"
               onClick={closeMobileMenu}
             >
               {t("nav.wallet")}
             </Link>
             {isDemoMode ? (
-              <button
+              <ShadCNButton // CORRETTO: Usa il tuo componente Button UI
                 onClick={() => {
-                  toggleDemoMode();
+                  handleExitDemo(); // Usa la funzione corretta
                   closeMobileMenu();
                 }}
-                className="px-4 py-2 border border-red-500 text-red-500 hover:bg-red-500 hover:bg-opacity-10 rounded-md font-medium text-sm transition-colors"
+                variant="outline" // Stile di default, puoi personalizzarlo
+                className="border-red-500 text-red-500 hover:bg-red-500 hover:bg-opacity-10 hover:text-red-500" // Mantenuto stile custom per exit demo
               >
                 Exit Demo
-              </button>
+              </ShadCNButton>
             ) : (
-              <a
-                href="/auth-page"
+              !isAuthenticated && <Link // CORRETTO: Usato Link e aggiunto check !isAuthenticated
+                to="/auth-page"
                 className="bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] px-5 py-2 rounded-md font-medium text-sm transition-all"
                 onClick={closeMobileMenu}
               >
                 {t("nav.login")}
-              </a>
+              </Link>
             )}
             <select
               className="appearance-none bg-transparent border border-secondary rounded-md px-2 py-1 text-sm font-medium text-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#00FFD1]"

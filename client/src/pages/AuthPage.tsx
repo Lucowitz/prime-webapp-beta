@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { v4 as uuidv4 } from 'uuid';
 
 import Cookies from 'js-cookie';
+
 
 const DEV_LOGIN_KEYWORD = 'devlogin';
 
@@ -16,13 +18,26 @@ interface AuthPageProps {
 }
 
 const AuthPage = ({ onLogin }: AuthPageProps) => {
+    const location = useLocation();
     const [isBusiness, setIsBusiness] = useState(false);
-    const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(location.hash !== '#register'); // Check if the URL hash is '#register'
     const [registrationStep, setRegistrationStep] = useState<'form' | 'success'>('form'); // ADD THIS LINE BACK
     const [validationUrl, setValidationUrl] = useState('');
     const [userData, setUserData] = useState<any>(null);
     const [totpSecret, setTotpSecret] = useState<string | null>(null);
 
+    
+    useEffect(() => {
+        if (location.hash === '#register') {
+            setIsLogin(false);
+        } 
+        // Potresti aggiungere un else if (location.hash === '#login' || !location.hash) per tornare al login
+        else if (location.hash === '#login' || !location.hash) {
+            setIsLogin(true);
+        }
+    }, [location.hash]); // Esegui quando l'hash cambia
+
+    
     const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -30,6 +45,7 @@ const AuthPage = ({ onLogin }: AuthPageProps) => {
         formData.forEach((value, key) => {
             data[key] = value;
         });
+        
 
         if (!isBusiness) {
             if (!data.Nome || !data.Cognome || !data.Indirizzo || !data["Codice Fiscale"] || !data.Email) {
@@ -173,7 +189,7 @@ const AuthPage = ({ onLogin }: AuthPageProps) => {
 
     const RegisterForm = ({ isBusiness }: { isBusiness: boolean }) => {
         return (
-            <form className="space-y-4" onSubmit={handleRegister}>
+            <form  className="space-y-4" onSubmit={handleRegister}>
                 {!isBusiness ? (
                     <>
                         <Input label="Nome" type="text" placeholder="Nome" name="Nome" required />

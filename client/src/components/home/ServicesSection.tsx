@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const ServicesSection = () => {
@@ -66,7 +66,7 @@ const ServicesSection = () => {
             </div>
             
             <Link
-              href="/services"
+              to="/services"
               className="inline-block mt-8 px-6 py-3 bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] rounded-md font-medium text-white transition-all"
             >
               {t("services.business.cta")}
@@ -119,7 +119,7 @@ const ServicesSection = () => {
             </div>
             
             <Link
-              href="/services"
+              to="/services#user-services"
               className="inline-block mt-8 px-6 py-3 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium transition-colors"
             >
               {t("services.users.cta")}

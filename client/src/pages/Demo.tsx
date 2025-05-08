@@ -1,19 +1,22 @@
+// client/src/pages/Demo.tsx
+
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDemo } from "@/context/DemoContext";
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom"; // MODIFICATO: da wouter a react-router-dom
 
 export default function Demo() {
   const { t } = useLanguage();
   const { toggleDemoMode, setDemoUserType } = useDemo();
-  const [, navigate] = useLocation();
+  const navigate = useNavigate(); // MODIFICATO: useNavigate() da react-router-dom
 
   const handleStartDemo = (userType: "company" | "user") => {
     toggleDemoMode(); // Enter demo mode
     setDemoUserType(userType);
     
+    // La funzione navigate è ora quella corretta da react-router-dom
     if (userType === "company") {
       navigate("/wallet");
     } else {

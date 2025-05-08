@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDemo } from "@/context/DemoContext";
 import PrimeGenesisLogo from "@/assets/icons/PrimeGenesisLogo";
@@ -19,7 +19,7 @@ const AuthedLayout = ({ children, onLogout }: AuthedLayoutProps) => {
       <header className="fixed w-full bg-[#1a0f2e] bg-opacity-95 backdrop-blur-sm z-50 border-b border-[#00FFD1] border-opacity-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            <Link href="/authed" className="flex items-center">
+            <Link to="/authed" className="flex items-center">
               <div className="flex items-center space-x-2">
                 <PrimeGenesisLogo />
                 <div className="flex items-center">

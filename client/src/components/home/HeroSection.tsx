@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const HeroSection = () => {
@@ -20,14 +20,14 @@ const HeroSection = () => {
             {t("hero.subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <a 
-              href="#get-started" 
+            <Link 
+              to="/demo" 
               className="w-full sm:w-auto bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] px-8 py-3 rounded-md font-medium text-white transition-all"
             >
               {t("hero.cta.get-started")}
-            </a>
+            </Link >
             <Link 
-              href="/token-explorer"
+              to="/token-explorer"
               className="w-full sm:w-auto px-8 py-3 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium transition-colors"
             >
               {t("hero.cta.explore-tokens")}

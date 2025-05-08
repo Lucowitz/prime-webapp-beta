@@ -1,5 +1,5 @@
 import { useLanguage } from "@/hooks/useLanguage";
-
+import { Link } from "react-router-dom";
 const WalletSection = () => {
   const { t } = useLanguage();
   
@@ -65,12 +65,12 @@ const WalletSection = () => {
               </div>
               
               <div className="mt-8">
-                <a 
-                  href="#create-wallet" 
+                <Link
+                  to="/auth-page#register" 
                   className="inline-block px-6 py-3 bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] rounded-md font-medium text-white transition-all"
                 >
                   {t("wallet.cta")}
-                </a>
+                </Link>
               </div>
             </div>
           </div>

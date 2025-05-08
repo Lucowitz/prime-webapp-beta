@@ -1,5 +1,5 @@
 import { useLanguage } from "@/hooks/useLanguage";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   const { t } = useLanguage();
@@ -27,12 +27,12 @@ const CTASection = () => {
               <p className="text-gray-300 mb-6">
                 {t("cta.business.desc")}
               </p>
-              <a 
-                href="#business-signup" 
+              <Link 
+                to="#business-consultation" 
                 className="inline-block px-6 py-3 bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] rounded-md font-medium text-white transition-all w-full text-center"
               >
                 {t("cta.business.button")}
-              </a>
+              </Link >
             </div>
             
             <div className="bg-[#2A2A2A] p-6 rounded-xl">
@@ -41,7 +41,7 @@ const CTASection = () => {
                 {t("cta.users.desc")}
               </p>
               <Link 
-                href="/wallet" 
+                to ="/login" 
                 className="inline-block px-6 py-3 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium transition-colors w-full text-center"
               >
                 {t("cta.users.button")}

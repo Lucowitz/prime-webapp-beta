@@ -1,5 +1,5 @@
 import { useLanguage } from "@/hooks/useLanguage";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
 export default function Services() {
@@ -72,12 +72,13 @@ export default function Services() {
                     </div>
                   </div>
                   
-                  <a 
-                    href="#business-consultation" 
+                  <Link
+                 
+                    to ="#business-consultation"  
                     className="inline-block px-6 py-3 bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:from-[#3373C4] hover:to-[#A45BF0] rounded-md font-medium text-white transition-all"
                   >
                     Schedule a Consultation
-                  </a>
+                  </Link>
                 </div>
                 
                 <div className="relative z-10">
@@ -138,7 +139,7 @@ export default function Services() {
                     </ol>
                   </div>
                   
-                  <div className="bg-[#121212] p-6 rounded-xl">
+                  <div  className="bg-[#121212] p-6 rounded-xl">
                     <h3 className="font-heading text-xl font-bold mb-4">Additional Business Services</h3>
                     <ul className="space-y-3">
                       <li className="flex items-center">
@@ -159,7 +160,7 @@ export default function Services() {
                         </svg>
                         <span>Marketing & Distribution Strategy</span>
                       </li>
-                      <li className="flex items-center">
+                      <li id="user-services" className="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#00FFD1] mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -220,7 +221,7 @@ export default function Services() {
                   </div>
                   
                   <Link 
-                    href="/wallet" 
+                    to="/auth-page#register"
                     className="inline-block px-6 py-3 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium transition-colors"
                   >
                     {t("wallet.cta")}

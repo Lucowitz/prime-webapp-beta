@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
 import TokenCard from "@/components/tokens/TokenCard";
 import TokenListFilter from "@/components/tokens/TokenListFilter";
@@ -73,7 +73,7 @@ const TokenExplorerSection = () => {
         
         <div className="text-center mt-12">
           <Link 
-            href="/token-explorer" 
+            to="/token-explorer" 
             className="inline-block px-8 py-3 border border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1] hover:bg-opacity-10 rounded-md font-medium transition-colors"
           >
             {t("tokens.viewall")}
