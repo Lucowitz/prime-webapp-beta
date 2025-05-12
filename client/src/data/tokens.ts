@@ -11,9 +11,10 @@ export const demoTokens: Token[] = [
     marketCap: "$1.2M",
     supply: "10M CCT",
     price: "$0.12",
-    currentPrice: 0.12,
+    currentPrice: 1.52,
     imageUrl: "https://images.unsplash.com/photo-1577962917302-cd874c4e31d2"
   },
+  
   {
     id: "technova-token",
     name: "TechNova Token",

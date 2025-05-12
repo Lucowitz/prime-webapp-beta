@@ -1,37 +1,51 @@
+// TokenExplorer.tsx
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
-import TokenCard from "@/components/tokens/TokenCard";
-import TokenListFilter from "@/components/tokens/TokenListFilter";
-import { demoTokens, officialTokens } from "@/data/tokens";
+import TokenCard from "@/components/tokens/TokenCard"; // Assicurati che il percorso sia corretto
+import TokenListFilter from "@/components/tokens/TokenListFilter"; // Assicurati che il percorso sia corretto
+import { demoTokens as actualDemoTokens, officialTokens } from "@/data/tokens"; // Rinomina per chiarezza
 import { useDemo } from "@/context/DemoContext";
-import { Token } from "@/types/tokens";
+import { Token as AppToken } from "@/types/tokens"; // Usa lo stesso tipo di Token definito altrove
 import { Helmet } from "react-helmet";
 
 export default function TokenExplorer() {
   const { t } = useLanguage();
   const { isDemoMode } = useDemo();
-  const initialTokens = isDemoMode ? demoTokens : officialTokens;
-  const [filteredTokens, setFilteredTokens] = useState<Token[]>(initialTokens);
+
+  // Usa actualDemoTokens che hai definito in data/tokens.ts
+  // Assicurati che actualDemoTokens sia un array di AppToken
+  const initialTokensToDisplay = isDemoMode ? actualDemoTokens : officialTokens;
+
+  const [filteredTokens, setFilteredTokens] = useState<AppToken[]>(initialTokensToDisplay);
   const [sector, setSector] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  // Aggiorna i token da visualizzare se la modalità demo cambia
+  useEffect(() => {
+    const currentSet = isDemoMode ? actualDemoTokens : officialTokens;
+    setFilteredTokens(currentSet);
+    // Resetta i filtri quando cambi modalità per evitare stati inconsistenti
+    setSector("all");
+    setSearchTerm("");
+  }, [isDemoMode]);
   
   useEffect(() => {
-    let filtered = isDemoMode ? demoTokens : officialTokens;
+    let newFiltered = isDemoMode ? actualDemoTokens : officialTokens;
     
     if (sector !== "all") {
-      filtered = filtered.filter(token => token.sector === sector);
+      newFiltered = newFiltered.filter(token => token.sector === sector);
     }
     
     if (searchTerm) {
-      filtered = filtered.filter(token => 
+      newFiltered = newFiltered.filter(token => 
         token.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         token.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        token.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (token.description && token.description.toLowerCase().includes(searchTerm.toLowerCase())) // Aggiungi controllo per description undefined
       );
     }
     
-    setFilteredTokens(filtered);
-  }, [sector, searchTerm]);
+    setFilteredTokens(newFiltered);
+  }, [sector, searchTerm, isDemoMode]); // Aggiungi isDemoMode alle dipendenze
   
   const handleSectorChange = (newSector: string) => {
     setSector(newSector);
@@ -48,7 +62,7 @@ export default function TokenExplorer() {
         <meta name="description" content="Explore business tokens created on the Prime Genesis platform. Each token has transparent documentation and real utility for businesses." />
       </Helmet>
       
-      <section className="py-20 bg-[#121212]">
+      <section className="py-20 bg-[#121212] text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h1 className="font-heading text-3xl md:text-4xl font-bold mb-6">
@@ -61,17 +75,15 @@ export default function TokenExplorer() {
             </p>
           </div>
           
-          {/* Filter & Search */}
           <TokenListFilter onSectorChange={handleSectorChange} onSearchChange={handleSearchChange} />
           
-          {/* Token Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {filteredTokens.length > 0 ? (
-              filteredTokens.map((token) => (
-                <TokenCard key={token.id} token={token} />
+              filteredTokens.map((tokenItem) => ( // Rinomina token a tokenItem per evitare shadowing
+                <TokenCard key={tokenItem.id} token={tokenItem} /> // Passa tokenItem
               ))
             ) : (
-              <div className="col-span-3 text-center py-10">
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10">
                 <p className="text-gray-400">No tokens found matching your criteria.</p>
               </div>
             )}

@@ -99,10 +99,13 @@ function AppContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+      
         <DemoProvider>
           <ThemeWrapper>
             <div className="flex flex-col min-h-screen">
+            
               <Header onLogout={handleLogout} isAuthenticated={isAuthenticated} />
+            
               <main className="flex-grow pt-16 md:pt-20">
                 <ScrollToTop />
                 <Routes>
@@ -136,6 +139,7 @@ function AppContent() {
             </div>
           </ThemeWrapper>
         </DemoProvider>
+     
       </LanguageProvider>
     </QueryClientProvider>
   );

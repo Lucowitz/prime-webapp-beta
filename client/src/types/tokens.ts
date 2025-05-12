@@ -7,6 +7,7 @@ export interface Token {
   marketCap: string;
   supply: string;
   price: string;
+  currentPrice: number;
   imageUrl: string;
 }
 
