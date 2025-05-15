@@ -2,10 +2,11 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import AuthLayout from './components/layout/AuthLayout';
 import Dashboard from './pages/Dashboard';
-import Wallet from './pages/Wallet';
+import Wallet from './pages/UserWallet';
 import TokenManager from './pages/TokenManager';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import Explorer from './pages/TokenExplorer';
 
 interface AuthRootProps {
   onLogout: () => void;
@@ -20,6 +21,7 @@ const AuthRoot = ({ onLogout }: AuthRootProps) => {
         <Route path="/tokens" element={<TokenManager />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/explorer" element={<Explorer />} />
       </Routes>
     </AuthLayout>
   );

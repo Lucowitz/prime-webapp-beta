@@ -9,6 +9,7 @@ export interface Token {
   price: string;
   currentPrice: number;
   imageUrl: string;
+  mint?: string; // Optional property for demo tokens
 }
 
 export type TokenSector = 

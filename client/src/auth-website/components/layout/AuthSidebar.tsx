@@ -7,6 +7,7 @@ import {
   Settings,
   User
 } from 'lucide-react';
+import path from 'path';
 
 const AuthSidebar = () => {
   const location = useLocation();
@@ -17,6 +18,7 @@ const AuthSidebar = () => {
     { path: '/authed/tokens', icon: <Coins />, label: 'Token Manager' },
     { path: '/authed/settings', icon: <Settings />, label: 'Settings' },
     { path: '/authed/profile', icon: <User />, label: 'Profile' },
+    {path: '/authed/explorer', icon: <User />, label: 'Explorer' },
   ];
 
   return (

@@ -3,13 +3,13 @@
     "",
     "\\client",
     "\\client\\src",
-    "\\client\\src\\components",
-    "\\client\\src\\components\\home",
-    "\\client\\src\\components\\layout",
-    "\\client\\src\\components\\tokens",
+    "\\client\\src\\auth-website",
+    "\\client\\src\\auth-website\\pages",
+    "\\client\\src\\authed",
     "\\client\\src\\context",
     "\\client\\src\\data",
     "\\client\\src\\pages"
   ],
+  "SelectedNode": "\\client\\src\\auth-website\\AuthRoot.tsx",
   "PreviewInSolutionExplorer": false
 }
