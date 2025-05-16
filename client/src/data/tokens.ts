@@ -41,7 +41,6 @@ export const officialTokens: Token[] = [
     price: "$0.033",
     currentPrice: 0.033,
     imageUrl: "https://images.unsplash.com/photo-1584982751601-97dcc096659c",
-    mint: "9fE2H5zd4XTJx9YatdaBAoQoHCFd1fmSTQ9ibvwPfhqC"
   },
   {
     id: "technova-token",
@@ -54,6 +53,18 @@ export const officialTokens: Token[] = [
     price: "$0.00035",
     currentPrice: 0.00035,
     imageUrl: "https://images.unsplash.com/photo-1603190287605-e6ade32fa852",
-    mint: "65ayjbQ7jG6xiAsjNATrR8EpjktGBHXEWf2x7H12pRGG"
+  },
+  {
+    id: "prime-gen-token-0.2",
+    name: "Prime Gen Token 0.2",
+    symbol: "PGT02",
+    description: "Utility token for Prime Genesis services and AI solutions. Provides discounts on services and access to exclusive features.",
+    sector: "technology",
+    marketCap: "$8.7M",
+    supply: "25M TNT",
+    price: "$0.00035",
+    currentPrice: 0.00035,
+    imageUrl: "https://raw.githubusercontent.com/Lucowitz/metadata/main/PrimeGenCopertina.png",
+    mint: "3NSBMvSc4BEtt4xe5tJ2S5vBNW1GftH4ZhyipcJAMpc6"
   }
 ];

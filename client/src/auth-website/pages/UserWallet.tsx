@@ -6,7 +6,8 @@ import { officialTokens, demoTokens } from "@/data/tokens";
 import { Token as StaticTokenData } from "@/types/tokens"; // Assicurati che questo tipo includa imageUrl e currentPrice (numero)
 
 //RICORDA DI RUNNARE IL SERVER NELLA CARTELLA server_express_solana -> node server.js DOPO AVER RUNNATO IL CLIENT npm run dev
-const DEV_USER_PRIVATE_KEY = "METTI LA TUA PRIVATE KEY QUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII";
+
+const DEV_USER_PRIVATE_KEY = "4xeiYMA4yzNyyrDesgTsLwCRRNh4CKD1LixTNMLz1g4hxMSTudKUVUp8AmtGNjQfkA5EGF3SvcXuDb7qvzNfBumz";
 const BACKEND_URL = "http://localhost:3000";
 const COINGECKO_SOL_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
 
