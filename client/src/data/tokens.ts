@@ -41,6 +41,7 @@ export const officialTokens: Token[] = [
     price: "$0.033",
     currentPrice: 0.033,
     imageUrl: "https://images.unsplash.com/photo-1584982751601-97dcc096659c",
+    decimals: 9
   },
   {
     id: "technova-token",
@@ -53,6 +54,7 @@ export const officialTokens: Token[] = [
     price: "$0.00035",
     currentPrice: 0.00035,
     imageUrl: "https://images.unsplash.com/photo-1603190287605-e6ade32fa852",
+    decimals: 9
   },
   {
     id: "prime-gen-token-0.2",
@@ -65,6 +67,8 @@ export const officialTokens: Token[] = [
     price: "$0.00035",
     currentPrice: 0.00035,
     imageUrl: "https://raw.githubusercontent.com/Lucowitz/metadata/main/PrimeGenCopertina.png",
-    mint: "3NSBMvSc4BEtt4xe5tJ2S5vBNW1GftH4ZhyipcJAMpc6"
+    mint: "3NSBMvSc4BEtt4xe5tJ2S5vBNW1GftH4ZhyipcJAMpc6",
+    LPmint: "9TiHhnD668gNjbhEdf2T443QB1277RkaoXPZZhaxLdzp",
+    decimals: 9
   }
 ];

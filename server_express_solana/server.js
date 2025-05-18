@@ -141,7 +141,7 @@ app.post('/wallet-info', async (req, res) => {
 // Route to send tokens
 app.post('/send-token', async (req, res) => {
     try {
-        const { privateKey, recipient, amount, mint, isNativeSol } = req.body;
+        const { privateKey, recipient, amount, mint, isNativeSol} = req.body;
         
         if (!privateKey || !recipient || amount === undefined) {
             return res.status(400).json({ error: 'Private key, recipient, and amount are required' });
@@ -240,6 +240,7 @@ app.post('/send-token', async (req, res) => {
     // Calculate token amount with proper decimals
     const tokenAmount = Math.floor(amount * Math.pow(10, decimals));
     
+    //TODO: Bisogna fare la gestione del caso in cui il token ha delle fee altrimenti non li manda
     // Add transfer instruction
     transaction.add(
         createTransferInstruction(

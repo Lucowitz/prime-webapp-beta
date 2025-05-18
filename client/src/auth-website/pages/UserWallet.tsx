@@ -6,9 +6,11 @@ import { officialTokens, demoTokens } from "@/data/tokens";
 import { Token as StaticTokenData } from "@/types/tokens"; // Assicurati che questo tipo includa imageUrl e currentPrice (numero)
 
 //RICORDA DI RUNNARE IL SERVER NELLA CARTELLA server_express_solana -> node server.js DOPO AVER RUNNATO IL CLIENT npm run dev
-
-const DEV_USER_PRIVATE_KEY = "4xeiYMA4yzNyyrDesgTsLwCRRNh4CKD1LixTNMLz1g4hxMSTudKUVUp8AmtGNjQfkA5EGF3SvcXuDb7qvzNfBumz";
+//
+// 
+const DEV_USER_PRIVATE_KEY = "METTI QUI CHIAVE PRIVATA";
 const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL_RAYDIUM = "http://localhost:3001"; // Se necessario, per le vendite effettive
 const COINGECKO_SOL_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
 
 const knownTokensData: Record<string, StaticTokenData> = {};
@@ -23,6 +25,7 @@ interface BackendTokenInfo {
   symbol: string;
   balance: string;
   mint: string;
+  LPmint: string | undefined;
   isNativeSol: boolean;
   decimals: number;
 }
@@ -38,6 +41,7 @@ interface PurchasedTokenInWallet {
   isNativeSol: boolean;
   decimals: number;
   isKnown: boolean; // Per l'ordinamento
+  LPmint: string | undefined; // Aggiunto per la vendita
 }
 
 interface UserWalletData {
@@ -78,6 +82,26 @@ const fetchSolanaPriceUSD_API = async (): Promise<number> => {
   }
 };
 
+const fetchTokenPriceInSol_API = async (poolId: string): Promise<number> => {
+  console.log(`[API CALL FRONTEND] Fetching token price in SOL for pool ${poolId}`);
+  const response = await fetch(`${BACKEND_URL_RAYDIUM}/token-price/${poolId}`); // Use BACKEND_URL_RAYDIUM
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
+    console.error(`[API CALL FRONTEND] Failed to fetch token price for pool ${poolId}:`, errorData.error || response.statusText);
+    throw new Error(errorData.error || `Failed to fetch token price for pool ${poolId} (status ${response.status})`);
+  }
+  
+  const data = await response.json();
+  if (typeof data.priceInSol !== 'number') {
+    console.error(`[API CALL FRONTEND] Invalid price data received for pool ${poolId}:`, data);
+    throw new Error(`Invalid price data received for pool ${poolId}`);
+  }
+  
+  console.log(`[API CALL FRONTEND] Price for pool ${poolId}: ${data.priceInSol} SOL/token`);
+  return data.priceInSol;
+};
+
 const fetchUserWalletData_API = async (privateKey: string): Promise<Omit<UserWalletData, 'isLoading' | 'error' | 'solanaPriceUSD'>> => {
   console.log(`[API CALL] Fetching wallet data from backend: ${BACKEND_URL}/wallet-info`);
   const response = await fetch(`${BACKEND_URL}/wallet-info`, {
@@ -101,13 +125,15 @@ const fetchUserWalletData_API = async (privateKey: string): Promise<Omit<UserWal
 
     if (backendToken.isNativeSol) {
       solBalance = amount;
-    } else {
-      const staticData = knownTokensData[backendToken.mint];
+    } else { // This is the block for non-native SOL tokens
+      const staticData = knownTokensData[backendToken.mint]; // backendToken.mint is the token's own mint
       
       const tokenName = staticData?.name || backendToken.name;
       const tokenSymbol = staticData?.symbol || backendToken.symbol;
       const logoUrl = staticData?.imageUrl;
+      // Use static currentPrice as a fallback; it will be updated by live fetch if LPmint exists and fetch is successful
       const currentPricePerTokenUSD = staticData?.currentPrice !== undefined ? staticData.currentPrice : 0;
+      const lpMintFromStatic = staticData?.LPmint; // <--- GET LPmint from static data
 
       processedTokens.push({
         tokenId: backendToken.mint,
@@ -115,11 +141,12 @@ const fetchUserWalletData_API = async (privateKey: string): Promise<Omit<UserWal
         tokenSymbol: tokenSymbol,
         logoUrl: logoUrl,
         amount: amount,
-        currentPricePerTokenUSD: currentPricePerTokenUSD,
-        currentValueUSD: amount * currentPricePerTokenUSD,
+        currentPricePerTokenUSD: currentPricePerTokenUSD, // Initial/fallback price
+        currentValueUSD: amount * currentPricePerTokenUSD, // Initial/fallback value
         isNativeSol: false,
-        decimals: decimals,
-        isKnown: !!staticData, // Flag per token conosciuti
+        decimals: decimals, // This should be backendToken.decimals
+        isKnown: !!staticData,
+        LPmint: lpMintFromStatic, // <--- ASSIGN LPmint HERE
       });
     }
   }
@@ -140,12 +167,133 @@ const sendTransaction_API = async ( privateKey: string, recipient: string, amoun
   return { success: true, message: `Tx successful: ${data.signature}`, transactionId: data.signature };
 };
 
-const sellCustomToken_API = async (tokenId: string, amount: number): Promise<{ success: boolean; message: string; receivedAmountSOL?: number }> => {
-  const staticData = knownTokensData[tokenId];
-  let estSOL = 0;
-  if (staticData?.currentPrice) estSOL = (amount * staticData.currentPrice) / (await fetchSolanaPriceUSD_API()); // Usa prezzo SOL aggiornato
-  return { success: true, message: `Simulated sell. Est. ~${estSOL.toFixed(4)} SOL.`, receivedAmountSOL: estSOL };
+
+
+const sellCustomToken_API = async (
+  tokenId: string,
+  amount: number,
+  privateKey: string,
+  slippage: number = 10
+): Promise<{ success: boolean; message: string; txId?: string }> => {
+  const logPrefix = "[sellCustomToken_API]";
+
+  // Trova il token
+  const token = officialTokens.find(t => t.mint === tokenId);
+  if (!token) {
+    return { success: false, message: `Token con mint ${tokenId} non trovato.` };
+  }
+
+  if (!token.LPmint) {
+    return { success: false, message: `LPmint mancante per il token ${token.symbol}.` };
+  }
+
+  if (typeof token.decimals !== 'number') {
+    return { success: false, message: `Decimali mancanti per il token ${token.symbol}.` };
+  }
+
+  const amountInBaseUnits = Math.round(amount * Math.pow(10, token.decimals));
+  if (amountInBaseUnits <= 0) {
+    return { success: false, message: "La quantità è troppo piccola." };
+  }
+
+  const payload = {
+    action: 'sell',
+    privateKey,
+    poolId: token.LPmint,
+    amount: amountInBaseUnits,
+    slippage
+  };
+
+  console.log(`${logPrefix} Payload:`, payload);
+
+  try {
+    const res = await fetch(`${BACKEND_URL_RAYDIUM}/swap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const resText = await res.text();
+    console.log(`${logPrefix} Raw response:`, resText);
+
+    const data = JSON.parse(resText);
+
+    if (!res.ok || data.error) {
+      return { success: false, message: data.error || `Errore ${res.status}` };
+    }
+
+    return {
+      success: true,
+      message: data.message || "Vendita completata con successo.",
+      txId: data.txId
+    };
+  } catch (err) {
+    console.error(`${logPrefix} Network error:`, err);
+    return { success: false, message: "Errore di rete o imprevisto durante la vendita." };
+  }
 };
+
+const buyCustomToken_API = async (
+  tokenId: string,
+  amount: number,
+  privateKey: string,
+  slippage: number = 10
+): Promise<{ success: boolean; message: string; txId?: string }> => {
+  const logPrefix = "[buyCustomToken_API]";
+
+  // Trova il token nei dati noti
+  const token = officialTokens.find(t => t.mint === tokenId);
+  if (!token) {
+    return { success: false, message: `Token con mint ${tokenId} non trovato.` };
+  }
+
+  if (!token.LPmint) {
+    return { success: false, message: `LPmint mancante per il token ${token.symbol}.` };
+  }
+
+  const amountInBaseUnits = Math.round(amount * Math.pow(10, 9));
+  if (amountInBaseUnits <= 0) {
+    return { success: false, message: "La quantità è troppo piccola." };
+  }
+  const payload = {
+    action: 'buy',
+    privateKey,
+    poolId: token.LPmint,
+    amount: amountInBaseUnits,
+    slippage
+  };
+
+  console.log(`${logPrefix} Payload:`, payload);
+
+  try {
+    const res = await fetch(`${BACKEND_URL_RAYDIUM}/swap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const resText = await res.text();
+    console.log(`${logPrefix} Raw response:`, resText);
+
+    const data = JSON.parse(resText);
+
+    if (!res.ok || data.error) {
+      return { success: false, message: data.error || `Errore ${res.status}` };
+    }
+
+    return {
+      success: true,
+      message: data.message || "Acquisto completato con successo.",
+      txId: data.txId
+    };
+  } catch (err) {
+    console.error(`${logPrefix} Network error:`, err);
+    return { success: false, message: "Errore di rete o imprevisto durante l'acquisto." };
+  }
+};
+
+
+
 
 // --- COMPONENT ---
 export default function UserWallet() {
@@ -161,16 +309,58 @@ export default function UserWallet() {
   const fetchAppData = useCallback(async () => {
     setWalletData(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const [walletInfo, solPrice] = await Promise.all([
+      // Step 1: Fetch SOL price (from CoinGecko) and basic wallet info (token list with static prices and LPmints)
+      const [initialWalletInfo, solPriceUSD] = await Promise.all([
         fetchUserWalletData_API(DEV_USER_PRIVATE_KEY),
         fetchSolanaPriceUSD_API()
       ]);
-      setWalletData({ ...walletInfo, solanaPriceUSD: solPrice, isLoading: false, error: null });
+  
+      // Step 2: Enhance token data with live prices from LPs for tokens that have an LPmint
+      const enrichedPurchasedTokens: PurchasedTokenInWallet[] = [];
+  
+      for (const token of initialWalletInfo.purchasedTokens) {
+        let livePricePerTokenUSD = token.currentPricePerTokenUSD; // Start with static/fallback price
+  
+        if (token.LPmint && !token.isNativeSol && solPriceUSD != null && solPriceUSD > 0) {
+          try {
+            console.log(`[fetchAppData] Token ${token.tokenSymbol} has LPmint ${token.LPmint}. Fetching live price...`);
+            const priceInSol = await fetchTokenPriceInSol_API(token.LPmint);
+            
+            if (typeof priceInSol === 'number') { // Ensure priceInSol is valid
+               livePricePerTokenUSD = priceInSol * solPriceUSD;
+               console.log(`[fetchAppData] Live price for ${token.tokenSymbol}: ${priceInSol.toFixed(8)} SOL * $${solPriceUSD.toFixed(2)}/SOL = $${livePricePerTokenUSD.toFixed(4)}/token`);
+            } else {
+              console.warn(`[fetchAppData] Received invalid priceInSol for ${token.tokenSymbol} (LP: ${token.LPmint}). Using fallback price.`);
+            }
+          } catch (priceError) {
+            console.warn(`[fetchAppData] Failed to fetch live price for ${token.tokenSymbol} (LP: ${token.LPmint}). Using fallback price. Error:`, priceError);
+            // Fallback to the initially set token.currentPricePerTokenUSD if live fetch fails
+          }
+        } else if (token.LPmint && (solPriceUSD == null || solPriceUSD <= 0)) {
+            console.warn(`[fetchAppData] Cannot calculate live USD price for ${token.tokenSymbol} because SOL price is unavailable or invalid ($${solPriceUSD}).`);
+        }
+  
+        enrichedPurchasedTokens.push({
+          ...token,
+          currentPricePerTokenUSD: livePricePerTokenUSD,
+          currentValueUSD: token.amount * livePricePerTokenUSD, // Recalculate value with potentially updated price
+        });
+      }
+  
+      setWalletData({
+        ...initialWalletInfo, // Spread initial wallet info (like address, SOL balance)
+        purchasedTokens: enrichedPurchasedTokens, // Use the list with updated prices
+        solanaPriceUSD: solPriceUSD,
+        isLoading: false,
+        error: null
+      });
+  
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Unknown error";
+      const errorMsg = err instanceof Error ? err.message : "Unknown error during app data fetch";
+      console.error("[fetchAppData] Error:", err);
       setWalletData(prev => ({ ...prev, isLoading: false, error: `Failed to load data: ${errorMsg}` }));
     }
-  }, []);
+  }, []); // DEV_USER_PRIVATE_KEY is a top-level const, so no dependency needed here.
 
   useEffect(() => { fetchAppData(); }, [fetchAppData]);
 
@@ -243,26 +433,87 @@ export default function UserWallet() {
       setIsSubmitting(false);
     }
   };
-  const handleInitiateSell = async (tokenId: string, tokenSymbol: string) => { /* ... (invariato, ma usa DEV_USER_PRIVATE_KEY) ... */
+
+  const handleInitiateSell = async (tokenId: string, tokenSymbol: string) => {
     const token = walletData.purchasedTokens.find(t => t.tokenId === tokenId);
     if (!token) return;
-    const amountStr = prompt(`Sell ${tokenSymbol} (Available: ${token.amount.toFixed(token.decimals)})?`);
+    
+    // Chiedi all'utente l'importo da vendere
+    const amountStr = prompt(`Sell ${tokenSymbol} (Available: ${token.amount.toFixed(token.decimals || 6)})?`);
     if (!amountStr) return;
+    
     const amount = Number(amountStr);
     if (isNaN(amount) || amount <= 0 || amount > token.amount) {
-      alert("Invalid amount."); return;
+      alert("Invalid amount.");
+      return;
     }
+    
+    // Chiedi all'utente lo slippage personalizzato (opzionale)
+    const slippageStr = prompt(`Slippage percentage (default 10%):`, "10");
+    const slippage = slippageStr ? Number(slippageStr) : 10;
+    
+    if (isNaN(slippage) || slippage <= 0 || slippage > 100) {
+      alert("Invalid slippage percentage. Using default 10%");
+    }
+    
     setIsSubmitting(true);
     try {
-      const result = await sellCustomToken_API(tokenId, amount); // Non serve privateKey per la simulazione
+      // Usa DEV_USER_PRIVATE_KEY o altra variabile che contiene la chiave privata
+      const result = await sellCustomToken_API(tokenId, amount, DEV_USER_PRIVATE_KEY, slippage);
       alert(result.message);
-      await fetchAppData();
+      
+      if (result.success) {
+        await fetchAppData(); // Aggiorna i dati dell'app dopo una vendita riuscita
+      }
     } catch (error) {
       alert(`Sell Error: ${error instanceof Error ? error.message : "Unknown."}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  const handleInitiateBuy = async (tokenId: string, tokenSymbol: string) => {
+    // Trova il token nei dati del wallet
+    const token = walletData.purchasedTokens.find(t => t.tokenId === tokenId);
+    if (!token) return;
+    
+    // Chiedi all'utente l'importo da acquistare
+    const amountStr = prompt(`Buy ${tokenSymbol} (amount in SOL to spend):`);
+    if (!amountStr) return;
+    
+    const amount = Number(amountStr);
+    if (isNaN(amount) || amount <= 0 || amount > walletData.solanaBalance) {
+      alert("Invalid amount.");
+      return;
+    }
+    
+    // Verifica che l'utente abbia abbastanza SOL (se hai questa informazione disponibile)
+    
+    // Chiedi all'utente lo slippage personalizzato (opzionale)
+    const slippageStr = prompt(`Slippage percentage (default 10%):`, "10");
+    const slippage = slippageStr ? Number(slippageStr) : 10;
+    
+    if (isNaN(slippage) || slippage <= 0 || slippage > 100) {
+      alert("Invalid slippage percentage. Using default 10%");
+    }
+    
+    setIsSubmitting(true);
+    try {
+      // Usa DEV_USER_PRIVATE_KEY o altra variabile che contiene la chiave privata
+      const result = await buyCustomToken_API(tokenId, amount, DEV_USER_PRIVATE_KEY, slippage);
+      alert(result.message);
+      
+      if (result.success) {
+        await fetchAppData(); // Aggiorna i dati dell'app dopo un acquisto riuscito
+      }
+    } catch (error) {
+      alert(`Buy Error: ${error instanceof Error ? error.message : "Unknown."}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
   const handleReceive = () => { /* ... (invariato) ... */
     if (walletData.solanaWalletAddress) {
       alert(`Your Solana Wallet Address:\n${walletData.solanaWalletAddress}`);
@@ -377,6 +628,7 @@ export default function UserWallet() {
                             <div className="mt-2 flex gap-2">
                                 <Button size="sm" variant="outline" className="text-xs border-sky-400 text-sky-400 hover:bg-sky-400/20 backdrop-blur-sm bg-slate-700/30" onClick={() => handleInitiateSend(token.tokenId)} disabled={isSubmitting}>Send</Button>
                                 <Button size="sm" variant="outline" className="text-xs border-emerald-400 text-emerald-400 hover:bg-emerald-400/20 backdrop-blur-sm bg-slate-700/30" onClick={() => handleInitiateSell(token.tokenId, token.tokenSymbol)} disabled={isSubmitting}>Sell (Sim)</Button>
+                                <Button size="sm" variant="outline" className="text-xs border-emerald-400 text-emerald-400 hover:bg-emerald-400/20 backdrop-blur-sm bg-slate-700/30" onClick={() => handleInitiateBuy(token.tokenId, token.tokenSymbol)} disabled={isSubmitting}>Buy (Sim)</Button>
                             </div>
                         </div>
                     </div>

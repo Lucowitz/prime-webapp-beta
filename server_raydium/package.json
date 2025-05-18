@@ -1,0 +1,26 @@
+{
+  "name": "solana-wallet-server",
+  "version": "1.0.0",
+  "description": "Server for Solana wallet operations",
+  "scripts": {
+    "start": "node server.ts",
+    "dev": "nodemon --watch . --ext ts --exec ts-node server.ts"
+  },
+  "dependencies": {
+    "@raydium-io/raydium-sdk-v2": "^0.1.119-alpha",
+    "@solana/spl-token": "^0.3.7",
+    "@solana/web3.js": "^1.73.3",
+    "bs58": "^5.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

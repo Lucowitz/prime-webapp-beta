@@ -10,6 +10,8 @@ export interface Token {
   currentPrice: number;
   imageUrl: string;
   mint?: string; // Optional property for demo tokens
+  LPmint?: string; // Optional property for demo tokens
+  decimals?: number; // Optional property for demo tokens
 }
 
 export type TokenSector = 
