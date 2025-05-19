@@ -4,6 +4,7 @@ const { Connection, PublicKey, Keypair, Transaction, SystemProgram, LAMPORTS_PER
 const { 
   TOKEN_PROGRAM_ID,
   createTransferInstruction,
+  createTransferCheckedInstruction,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction
 } = require('@solana/spl-token');
@@ -139,142 +140,142 @@ app.post('/wallet-info', async (req, res) => {
 });
 
 // Route to send tokens
+// Route to send tokens
 app.post('/send-token', async (req, res) => {
     try {
-        const { privateKey, recipient, amount, mint, isNativeSol} = req.body;
-        
+        const { privateKey, recipient, amount, mint, isNativeSol } = req.body;
+
         if (!privateKey || !recipient || amount === undefined) {
             return res.status(400).json({ error: 'Private key, recipient, and amount are required' });
         }
-        
-        // Create keypair from private key
+
         const secretKey = bs58.decode(privateKey);
         const keypair = Keypair.fromSecretKey(secretKey);
-        
-        // Create recipient public key
         const recipientPubkey = new PublicKey(recipient);
-        
-        let transaction = new Transaction();
+        const transaction = new Transaction();
         let signature;
-        
+
         if (isNativeSol) {
-    // Send SOL
-    transaction.add(
-        SystemProgram.transfer({
-            fromPubkey: keypair.publicKey,
-            toPubkey: recipientPubkey,
-            lamports: Math.floor(amount * LAMPORTS_PER_SOL)
-        })
-    );
-    
-    // Set fee payer
-    transaction.feePayer = keypair.publicKey;
-    
-    // Get recent blockhash
-    const {blockhash} = await connection.getRecentBlockhash();
-    transaction.recentBlockhash = blockhash;
-    
-    // Sign transaction - Fixed method
-    transaction.sign(keypair);
-    
-    // Send transaction
-    const rawTransaction = transaction.serialize();
-    signature = await connection.sendRawTransaction(rawTransaction);
-    
-    // Confirm transaction
-    await connection.confirmTransaction(signature);
-} else {
-    // Send SPL Token
-    const mintPubkey = new PublicKey(mint);
-    
-    // First determine if this is a Token-2022 or regular SPL token
-    const mintInfo = await connection.getAccountInfo(mintPubkey);
-    const programId = mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID) ? 
-        TOKEN_2022_PROGRAM_ID : 
-        TOKEN_PROGRAM_ID;
-    
-    // Get sender token account
-    const fromTokenAccount = await getAssociatedTokenAddress(
-        mintPubkey,
-        keypair.publicKey,
-        false,
-        programId,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-    );
-    
-    // Get recipient token account
-    const toTokenAccount = await getAssociatedTokenAddress(
-        mintPubkey,
-        recipientPubkey,
-        false,
-        programId,
-        ASSOCIATED_TOKEN_PROGRAM_ID
-    );
-    
-    // Check if recipient token account exists
-    const recipientAccountInfo = await connection.getAccountInfo(toTokenAccount);
-    
-    // If recipient account doesn't exist, create it first
-    if (!recipientAccountInfo) {
-        transaction.add(
-            createAssociatedTokenAccountInstruction(
-                keypair.publicKey,
-                toTokenAccount,
-                recipientPubkey,
+            // Send SOL
+            transaction.add(
+                SystemProgram.transfer({
+                    fromPubkey: keypair.publicKey,
+                    toPubkey: recipientPubkey,
+                    lamports: Math.floor(amount * LAMPORTS_PER_SOL)
+                })
+            );
+
+            transaction.feePayer = keypair.publicKey;
+            const { blockhash } = await connection.getRecentBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.sign(keypair);
+            const rawTransaction = transaction.serialize();
+            signature = await connection.sendRawTransaction(rawTransaction);
+            await connection.confirmTransaction(signature);
+
+        } else {
+            const mintPubkey = new PublicKey(mint);
+            const mintInfo = await connection.getAccountInfo(mintPubkey);
+            const programId = mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
+
+            const fromTokenAccount = await getAssociatedTokenAddress(
                 mintPubkey,
+                keypair.publicKey,
+                false,
                 programId,
                 ASSOCIATED_TOKEN_PROGRAM_ID
-            )
-        );
-    }
-    
-    // Get token info to determine decimals
-    let decimals = 9; // Default
-    try {
-        const tokenSupply = await connection.getTokenSupply(mintPubkey);
-        decimals = tokenSupply.value.decimals;
-    } catch (error) {
-        console.log("Could not get token decimals, using default 9");
-    }
-    
-    // Calculate token amount with proper decimals
-    const tokenAmount = Math.floor(amount * Math.pow(10, decimals));
-    
-    //TODO: Bisogna fare la gestione del caso in cui il token ha delle fee altrimenti non li manda
-    // Add transfer instruction
-    transaction.add(
-        createTransferInstruction(
-            fromTokenAccount,
-            toTokenAccount,
-            keypair.publicKey,
-            tokenAmount,
-            [],
-            programId
-        )
-    );
-    
-    // Sign and send transaction
-    transaction.feePayer = keypair.publicKey;
-    const {blockhash} = await connection.getRecentBlockhash();
-    transaction.recentBlockhash = blockhash;
-    
-    // Sign transaction
-    transaction.sign(keypair);
-    
-    // Send transaction
-    const rawTransaction = transaction.serialize();
-    signature = await connection.sendRawTransaction(rawTransaction);
-    
-    // Confirm transaction
-    await connection.confirmTransaction(signature);
-}
-        
-        // Send response
+            );
+
+            const toTokenAccount = await getAssociatedTokenAddress(
+                mintPubkey,
+                recipientPubkey,
+                false,
+                programId,
+                ASSOCIATED_TOKEN_PROGRAM_ID
+            );
+
+            const recipientAccountInfo = await connection.getAccountInfo(toTokenAccount);
+            if (!recipientAccountInfo) {
+                transaction.add(
+                    createAssociatedTokenAccountInstruction(
+                        keypair.publicKey,
+                        toTokenAccount,
+                        recipientPubkey,
+                        mintPubkey,
+                        programId,
+                        ASSOCIATED_TOKEN_PROGRAM_ID
+                    )
+                );
+            }
+
+            let decimals = 9;
+            try {
+                const tokenSupply = await connection.getTokenSupply(mintPubkey);
+                decimals = tokenSupply.value.decimals;
+            } catch (error) {
+                console.log("Could not get token decimals, using default 9");
+            }
+
+            const tokenAmount = Math.floor(amount * Math.pow(10, decimals));
+
+            const buildAndSend = async (instructionBuilder) => {
+                const tx = new Transaction().add(...transaction.instructions); // keep previous ones (e.g., associated account)
+                tx.add(instructionBuilder());
+                tx.feePayer = keypair.publicKey;
+                const { blockhash } = await connection.getRecentBlockhash();
+                tx.recentBlockhash = blockhash;
+                tx.sign(keypair);
+                const raw = tx.serialize();
+                const sig = await connection.sendRawTransaction(raw);
+                await connection.confirmTransaction(sig);
+                return sig;
+            };
+
+            // Try transfer_checked first
+            try {
+                const sig = await buildAndSend(() => createTransferCheckedInstruction(
+                    fromTokenAccount,
+                    mintPubkey,
+                    toTokenAccount,
+                    keypair.publicKey,
+                    tokenAmount,
+                    decimals,
+                    [],
+                    programId
+                ));
+                signature = sig;
+
+            } catch (e1) {
+                console.warn("Standard transfer_checked failed, trying with fee (likely Token-2022 with fees)");
+
+                try {
+                    const { createTransferCheckedWithFeeInstruction } = await import('@solana/spl-token');
+
+                    const sig = await buildAndSend(() => createTransferCheckedWithFeeInstruction(
+                        fromTokenAccount,
+                        mintPubkey,
+                        toTokenAccount,
+                        keypair.publicKey,
+                        tokenAmount,
+                        decimals,
+                        0, // Fee amount, 0 lets the program auto-calculate based on fee config
+                        [],
+                        programId
+                    ));
+                    signature = sig;
+
+                } catch (e2) {
+                    console.error("Both transfer methods failed:", e2);
+                    return res.status(500).json({ error: 'Token transfer failed with and without fee logic.' });
+                }
+            }
+        }
+
         res.json({
             success: true,
             signature
         });
-        
+
     } catch (error) {
         console.error("Error sending tokens:", error);
         res.status(500).json({ error: error.message });

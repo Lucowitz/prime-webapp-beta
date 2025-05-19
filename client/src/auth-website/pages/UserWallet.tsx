@@ -8,7 +8,7 @@ import { Token as StaticTokenData } from "@/types/tokens"; // Assicurati che que
 //RICORDA DI RUNNARE IL SERVER NELLA CARTELLA server_express_solana -> node server.js DOPO AVER RUNNATO IL CLIENT npm run dev
 //
 // 
-const DEV_USER_PRIVATE_KEY = "METTI QUI CHIAVE PRIVATA";
+const DEV_USER_PRIVATE_KEY = "METTI PRIVATE KEY QUI";
 const BACKEND_URL = "http://localhost:3000";
 const BACKEND_URL_RAYDIUM = "http://localhost:3001"; // Se necessario, per le vendite effettive
 const COINGECKO_SOL_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
