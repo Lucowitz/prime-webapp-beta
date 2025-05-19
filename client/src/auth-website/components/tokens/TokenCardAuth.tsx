@@ -1,101 +1,14 @@
-// TokenCardAuthUser.tsx
-import { Token as AppToken } from "@/types/tokens"; // Usa lo stesso tipo di Token
+// src/auth-website/components/tokens/TokenCardAuth.tsx
+import { Token as AppToken } from "@/types/tokens";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { officialTokens } from "@/data/tokens"; // Required for buyCustomToken_API logic
-
-// --- START: COPIED/ADAPTED FROM UserWallet.tsx (RECOMMEND MOVING TO A SHARED API UTIL FILE) ---
-// These constants and functions are copied here for demonstration.
-// In a real application, they should be in a shared module.
-
-const DEV_USER_PRIVATE_KEY = "4xeiYMA4yzNyyrDesgTsLwCRRNh4CKD1LixTNMLz1g4hxMSTudKUVUp8AmtGNjQfkA5EGF3SvcXuDb7qvzNfBumz"; // !!! IMPORTANT: HANDLE SECURELY IN PRODUCTION !!!
-const BACKEND_URL_RAYDIUM = "http://localhost:3001";
-const COINGECKO_SOL_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
-
-const fetchSolanaPriceUSD_API = async (): Promise<number> => {
-  try {
-    const response = await fetch(COINGECKO_SOL_PRICE_API);
-    if (!response.ok) throw new Error(`CoinGecko API responded with ${response.status}`);
-    const data = await response.json();
-    if (data.solana && data.solana.usd) return data.solana.usd;
-    throw new Error("Solana price not found in CoinGecko response");
-  } catch (error) {
-    console.warn("Failed to fetch Solana price from CoinGecko, using fallback. Error:", error);
-    return 170; // Fallback price
-  }
-};
-
-const fetchTokenPriceInSol_API = async (poolId: string): Promise<number> => {
-  if (!poolId) throw new Error("Pool ID is required to fetch token price.");
-  const response = await fetch(`${BACKEND_URL_RAYDIUM}/token-price/${poolId}`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
-    throw new Error(errorData.error || `Failed to fetch token price for pool ${poolId} (status ${response.status})`);
-  }
-  const data = await response.json();
-  if (typeof data.priceInSol !== 'number') throw new Error(`Invalid price data received for pool ${poolId}`);
-  return data.priceInSol;
-};
-
-const buyCustomToken_API = async (
-  tokenId: string, // This is the token.mint
-  amountSOLToSpend: number,
-  privateKey: string,
-  slippage: number = 10
-): Promise<{ success: boolean; message: string; txId?: string }> => {
-  const logPrefix = "[buyCustomToken_API_TokenCard]";
-
-  const tokenInfo = officialTokens.find(t => t.mint === tokenId);
-  if (!tokenInfo) {
-    return { success: false, message: `Token with mint ${tokenId} not found in officialTokens list.` };
-  }
-
-  if (!tokenInfo.LPmint) {
-    return { success: false, message: `LPmint missing for the token ${tokenInfo.symbol}.` };
-  }
-
-  // Amount is in SOL, needs to be converted to lamports (SOL's base unit)
-  const amountInBaseUnits = Math.round(amountSOLToSpend * Math.pow(10, 9)); // SOL has 9 decimals
-  if (amountInBaseUnits <= 0) {
-    return { success: false, message: "Amount of SOL to spend is too small." };
-  }
-
-  const payload = {
-    action: 'buy',
-    privateKey,
-    poolId: tokenInfo.LPmint,
-    amount: amountInBaseUnits, // This is amount of SOL in lamports
-    slippage
-  };
-
-  console.log(`${logPrefix} Payload:`, payload);
-
-  try {
-    const res = await fetch(`${BACKEND_URL_RAYDIUM}/swap`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const resText = await res.text();
-    const data = JSON.parse(resText); // Try to parse JSON regardless of res.ok
-    if (!res.ok || data.error) {
-      return { success: false, message: data.error || `Error ${res.status}: ${data.message || resText}` };
-    }
-    return {
-      success: true,
-      message: data.message || "Purchase completed successfully.",
-      txId: data.txId
-    };
-  } catch (err) {
-    console.error(`${logPrefix} Network error or JSON parsing error:`, err);
-    let message = "Network error or unexpected issue during purchase.";
-    if (err instanceof Error) message = err.message;
-    return { success: false, message };
-  }
-};
-// --- END: COPIED/ADAPTED FROM UserWallet.tsx ---
-
+import {
+  DEV_USER_PRIVATE_KEY, // Imported but used implicitly by buyCustomToken_API
+  fetchSolanaPriceUSD_API,
+  fetchTokenPriceInSol_API,
+  buyCustomToken_API
+} from "../services/apiService.ts"; // Adjust the relative path if your file structure is different
 
 interface TokenCardProps {
   token: AppToken;
@@ -122,10 +35,11 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
       }
       setIsLoadingPrice(true);
       try {
+        // Using imported API functions
         const fetchedSolPrice = await fetchSolanaPriceUSD_API();
         setSolanaPriceUSD(fetchedSolPrice);
 
-        if (token.LPmint) {
+        if (token.LPmint) { // Check again, though outer if already checks
           const fetchedTokenPriceSOL = await fetchTokenPriceInSol_API(token.LPmint);
           setTokenPriceInSOL(fetchedTokenPriceSOL);
 
@@ -153,8 +67,9 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
       alert("Price information is still loading or unavailable. Please try again in a moment.");
       return;
     }
-    // You might want to add a check for DEV_USER_PRIVATE_KEY presence here
-    // if (DEV_USER_PRIVATE_KEY === "METTI PRIVATE KEY QUI") {
+    // DEV_USER_PRIVATE_KEY is imported. If it's a placeholder, this check might be useful.
+    // Assuming DEV_USER_PRIVATE_KEY from apiService is the actual key for now.
+    // if (DEV_USER_PRIVATE_KEY === "YOUR_PLACEHOLDER_PRIVATE_KEY") {
     //   alert("Developer private key is not configured. Purchase disabled.");
     //   return;
     // }
@@ -173,22 +88,20 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
         alert("Token mint ID is missing. Cannot proceed with purchase.");
         return;
     }
-    if (!DEV_USER_PRIVATE_KEY) {
-        alert("Private key not configured. Please configure it in the source code."); // Or use a more secure method
-        return;
-    }
-
+    // DEV_USER_PRIVATE_KEY is imported and will be passed to buyCustomToken_API
+    // No need for an explicit check for its existence here if apiService handles it,
+    // or if we assume it's always configured.
+    // The buyCustomToken_API will use the imported DEV_USER_PRIVATE_KEY.
 
     setIsSubmittingPurchase(true);
     try {
-      // Default slippage, or you can add a field for it in the dialog
+      // Using imported API function
       const result = await buyCustomToken_API(token.mint, amountSOL, DEV_USER_PRIVATE_KEY, 10); 
       alert(result.message);
       if (result.success) {
         setShowPurchaseDialog(false);
         setSolAmountToSpend("");
-        // if (onPurchaseSuccess) onPurchaseSuccess(); // Call parent callback if provided
-        // Optionally, you could trigger a wallet balance refresh here or rely on UserWallet's auto-refresh
+        // if (onPurchaseSuccess) onPurchaseSuccess();
       }
     } catch (error) {
       alert(`Purchase Error: ${error instanceof Error ? error.message : "An unknown error occurred."}`);
@@ -199,8 +112,8 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
 
   const sectorLabel = t(`tokens.sectors.${token.sector || 'unknown'}`);
 
-  const estimatedTokensToReceive = (solAmountToSpend && tokenPriceInSOL && Number(solAmountToSpend) > 0)
-    ? (Number(solAmountToSpend) / tokenPriceInSOL).toFixed(token.decimals || 6) // Use token specific decimals
+  const estimatedTokensToReceive = (solAmountToSpend && tokenPriceInSOL && Number(solAmountToSpend) > 0 && tokenPriceInSOL > 0)
+    ? (Number(solAmountToSpend) / tokenPriceInSOL).toFixed(token.decimals ?? 6)
     : "0.00";
   
   const costInUSD = (solAmountToSpend && solanaPriceUSD && Number(solAmountToSpend) > 0)
@@ -208,6 +121,22 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
     : "0.00";
 
   const displayPrice = liveTokenPriceUSD ?? token.currentPrice;
+
+  // Helper for buy button text - assumes DEV_USER_PRIVATE_KEY is the actual key
+  // If DEV_USER_PRIVATE_KEY could be a placeholder like "YOUR_KEY_HERE", this logic would change
+  const buyButtonTextHelper = () => {
+    if (isSubmittingPurchase) return "Processing...";
+    let text = t("tokens.card.buy");
+    if (isLoadingPrice || (!solanaPriceUSD && token.LPmint)) { // Show loading only if LPmint exists and price is expected
+        text += " (Loading Price...)";
+    }
+    // Example: if DEV_USER_PRIVATE_KEY was a placeholder
+    // if (DEV_USER_PRIVATE_KEY === "YOUR_PLACEHOLDER_PRIVATE_KEY" && token.LPmint) {
+    //    text += " (Configure Key)";
+    // }
+    return text;
+  };
+
 
   return (
     <div className="token-card bg-[#1E1E1E] border border-gray-700 rounded-xl overflow-hidden hover:border-[#00FFD1]/70 transition-all duration-300 flex flex-col shadow-lg">
@@ -258,7 +187,7 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
           <div>
             <span className="text-gray-500 block uppercase tracking-wider">{t("tokens.card.price")}</span>
             <span className="font-medium font-mono text-white">
-              {isLoadingPrice ? "Loading..." : (displayPrice !== undefined && displayPrice !== null ? `$${displayPrice.toFixed(Math.max(2, (displayPrice < 1 ? 4 : 2)))}` : "N/A")}
+              {isLoadingPrice && token.LPmint ? "Loading..." : (displayPrice !== undefined && displayPrice !== null ? `$${displayPrice.toFixed(Math.max(2, (displayPrice < 1 ? (displayPrice < 0.0001 ? 6 : 4) : 2)))}` : "N/A")}
             </span>
           </div>
         </div>
@@ -272,15 +201,13 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
             {t("tokens.card.details")}
           </Button>
           
-          {token.LPmint && token.mint && ( // Show Buy button only if LPmint and token.mint exist
+          {token.LPmint && token.mint && (
             <Button
               onClick={handleInitiatePurchase}
               className="flex-1 bg-gradient-to-r from-[#00FFD1] to-[#00c0a0] text-black hover:opacity-90"
-              disabled={isLoadingPrice || isSubmittingPurchase || !solanaPriceUSD || !tokenPriceInSOL }
+              disabled={isLoadingPrice || isSubmittingPurchase || !solanaPriceUSD || !tokenPriceInSOL || !token.LPmint } // Added !token.LPmint for safety, though outer if covers it
             >
-              {isSubmittingPurchase ? "Processing..." : t("tokens.card.buy")}
-              {(isLoadingPrice || (!solanaPriceUSD && !token.LPmint)) && " (Loading Price...)"}
-              {(DEV_USER_PRIVATE_KEY && token.LPmint) && " (Configure Key)"}
+              {buyButtonTextHelper()}
             </Button>
           )}
         </div>
@@ -296,10 +223,12 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
                 {tokenPriceInSOL && liveTokenPriceUSD && (
                     <p className="text-gray-400">
                         Current {token.symbol} Price: 
-                        <span className="font-mono text-white"> {tokenPriceInSOL.toFixed(6)} SOL</span> / 
+                        <span className="font-mono text-white"> {tokenPriceInSOL.toFixed(Math.max(4, token.decimals || 6))} SOL</span> / 
                         <span className="font-mono text-white"> ${liveTokenPriceUSD.toFixed(4)}</span>
                     </p>
                 )}
+                 {!tokenPriceInSOL && isLoadingPrice && <p className="text-gray-400">Loading token price...</p>}
+                 {!tokenPriceInSOL && !isLoadingPrice && <p className="text-red-400">Could not load token price.</p>}
             </div>
 
             <div className="mb-4">
@@ -311,13 +240,13 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
                     onChange={(e) => setSolAmountToSpend(e.target.value)}
                     className="w-full p-2 bg-[#2A2A2A] rounded mt-1 text-white border border-gray-600 focus:border-[#00FFD1] outline-none"
                     placeholder="0.00 SOL"
-                    min="0.000001"
+                    min="0.000001" // Smallest reasonable SOL amount
                     step="any"
-                    disabled={isSubmittingPurchase}
+                    disabled={isSubmittingPurchase || isLoadingPrice || !tokenPriceInSOL}
                 />
             </div>
 
-            {(Number(solAmountToSpend) > 0 && tokenPriceInSOL && solanaPriceUSD) && (
+            {(Number(solAmountToSpend) > 0 && tokenPriceInSOL && solanaPriceUSD && tokenPriceInSOL > 0) && (
                 <div className="mb-6 text-sm text-gray-400 bg-[#2A2A2A]/50 p-3 rounded-md">
                     <p>You are spending: <span className="font-mono text-white">{Number(solAmountToSpend).toFixed(4)} SOL</span> (approx. <span className="font-mono text-white">${costInUSD} USD</span>)</p>
                     <p>You will receive approx: <span className="font-mono text-white">{estimatedTokensToReceive} {token.symbol}</span></p>
@@ -332,7 +261,7 @@ const TokenCard = ({ token /*, onPurchaseSuccess */ }: TokenCardProps) => {
               <Button 
                 onClick={handleConfirmPurchase} 
                 className="flex-1 bg-gradient-to-r from-[#00FFD1] to-[#00c0a0] text-black hover:opacity-90"
-                disabled={isSubmittingPurchase || !solAmountToSpend || Number(solAmountToSpend) <= 0 || !tokenPriceInSOL || !solanaPriceUSD }
+                disabled={isSubmittingPurchase || !solAmountToSpend || Number(solAmountToSpend) <= 0 || !tokenPriceInSOL || !solanaPriceUSD || isLoadingPrice || tokenPriceInSOL <= 0}
               >
                 {isSubmittingPurchase ? "Processing..." : "Confirm Purchase"}
               </Button>
