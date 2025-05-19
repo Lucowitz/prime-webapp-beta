@@ -8,7 +8,7 @@ import { Token as StaticTokenData } from "@/types/tokens"; // Assicurati che que
 //RICORDA DI RUNNARE IL SERVER NELLA CARTELLA server_express_solana -> node server.js DOPO AVER RUNNATO IL CLIENT npm run dev
 //
 // 
-const DEV_USER_PRIVATE_KEY = "METTI PRIVATE KEY QUI";
+const DEV_USER_PRIVATE_KEY = "4xeiYMA4yzNyyrDesgTsLwCRRNh4CKD1LixTNMLz1g4hxMSTudKUVUp8AmtGNjQfkA5EGF3SvcXuDb7qvzNfBumz";
 const BACKEND_URL = "http://localhost:3000";
 const BACKEND_URL_RAYDIUM = "http://localhost:3001"; // Se necessario, per le vendite effettive
 const COINGECKO_SOL_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
@@ -572,7 +572,7 @@ export default function UserWallet() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
                 <Button onClick={() => handleInitiateSend("SOL")} className="bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white py-3"><span className="flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>Send SOL</span></Button>
                 <Button onClick={handleReceive} className="bg-gradient-to-r from-[#0047AB] to-[#8A2BE2] hover:opacity-90 text-white py-3"><span className="flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>Receive</span></Button>
-                <Button variant="outline" className="border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 py-3 col-span-2 sm:col-span-1" onClick={() => window.location.href = '/auth/token-explorer'}><span className="flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>Buy Tokens</span></Button>
+                <Button variant="outline" className="border-[#00FFD1] text-[#00FFD1] hover:bg-[#00FFD1]/10 py-3 col-span-2 sm:col-span-1" onClick={() => window.location.href = '/authed/explorer'}><span className="flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>Buy Tokens</span></Button>
               </div>
 
               {/* Token List Header & Sorting */}

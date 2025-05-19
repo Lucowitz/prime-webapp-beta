@@ -1,6 +1,7 @@
 
 import { Token } from "../types/tokens";
 
+
 export const demoTokens: Token[] = [
   {
     id: "crave-coffee-token",
@@ -30,6 +31,7 @@ export const demoTokens: Token[] = [
 ];
 
 export const officialTokens: Token[] = [
+  /*
   {
     id: "health-plus-token",
     name: "Health Plus Token",
@@ -55,7 +57,7 @@ export const officialTokens: Token[] = [
     currentPrice: 0.00035,
     imageUrl: "https://images.unsplash.com/photo-1603190287605-e6ade32fa852",
     decimals: 9
-  },
+  },*/
   {
     id: "prime-gen-token-0.2",
     name: "Prime Gen Token 0.2",

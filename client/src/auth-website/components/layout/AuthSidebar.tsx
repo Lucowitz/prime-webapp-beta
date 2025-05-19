@@ -15,10 +15,9 @@ const AuthSidebar = () => {
   const menuItems = [
     { path: '/authed', icon: <LayoutDashboard />, label: 'Dashboard' },
     { path: '/authed/wallet', icon: <Wallet />, label: 'Wallet' },
-    { path: '/authed/tokens', icon: <Coins />, label: 'Token Manager' },
     { path: '/authed/settings', icon: <Settings />, label: 'Settings' },
     { path: '/authed/profile', icon: <User />, label: 'Profile' },
-    {path: '/authed/explorer', icon: <User />, label: 'Explorer' },
+    {path: '/authed/explorer', icon: <Coins />, label: 'Token Explorer' },
   ];
 
   return (

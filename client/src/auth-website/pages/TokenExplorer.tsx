@@ -3,18 +3,14 @@ import { useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import TokenCard from "@/auth-website/components/tokens/TokenCardAuth"; // Assicurati che il percorso sia corretto
 import TokenListFilter from "@/auth-website/components/tokens/TokenListFilterAuth"; // Assicurati che il percorso sia corretto
-import { demoTokens as actualDemoTokens, officialTokens } from "@/data/tokens"; // Rinomina per chiarezza
-import { useDemo } from "@/context/DemoContext";
+import {  officialTokens } from "@/data/tokens"; // Rinomina per chiarezza
 import { Token as AppToken } from "@/types/tokens"; // Usa lo stesso tipo di Token definito altrove
 import { Helmet } from "react-helmet";
 
 export default function TokenExplorer() {
   const { t } = useLanguage();
-  const { isDemoMode } = useDemo();
 
-  // Usa actualDemoTokens che hai definito in data/tokens.ts
-  // Assicurati che actualDemoTokens sia un array di AppToken
-  const initialTokensToDisplay = isDemoMode ? actualDemoTokens : officialTokens;
+  const initialTokensToDisplay =  officialTokens;
 
   const [filteredTokens, setFilteredTokens] = useState<AppToken[]>(initialTokensToDisplay);
   const [sector, setSector] = useState<string>("all");
@@ -22,15 +18,15 @@ export default function TokenExplorer() {
 
   // Aggiorna i token da visualizzare se la modalità demo cambia
   useEffect(() => {
-    const currentSet = isDemoMode ? actualDemoTokens : officialTokens;
+    const currentSet =  officialTokens;
     setFilteredTokens(currentSet);
     // Resetta i filtri quando cambi modalità per evitare stati inconsistenti
     setSector("all");
     setSearchTerm("");
-  }, [isDemoMode]);
+  }, []);
   
   useEffect(() => {
-    let newFiltered = isDemoMode ? actualDemoTokens : officialTokens;
+    let newFiltered =  officialTokens;
     
     if (sector !== "all") {
       newFiltered = newFiltered.filter(token => token.sector === sector);
@@ -45,7 +41,7 @@ export default function TokenExplorer() {
     }
     
     setFilteredTokens(newFiltered);
-  }, [sector, searchTerm, isDemoMode]); // Aggiungi isDemoMode alle dipendenze
+  }, [sector, searchTerm]); 
   
   const handleSectorChange = (newSector: string) => {
     setSector(newSector);
