@@ -72,5 +72,20 @@ export const officialTokens: Token[] = [
     mint: "3NSBMvSc4BEtt4xe5tJ2S5vBNW1GftH4ZhyipcJAMpc6",
     LPmint: "9TiHhnD668gNjbhEdf2T443QB1277RkaoXPZZhaxLdzp",
     decimals: 9
+  },
+  {
+    id: "spoty-test-ray",
+    name: "Spoty Test Ray",
+    symbol: "STR",
+    description: "One of the first test for what is that... oh shis again, no!!!",
+    sector: "health",
+    marketCap: "$8.7M",
+    supply: "25M TNT",
+    price: "$0.00035",
+    currentPrice: 0.00035,
+    imageUrl: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?q=80&w=1794&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    mint: "7p8kJBiEDpHxr6ZSyXCZze8LZm4dnkC1ptQ2uu9QSwzA",
+    LPmint: "BeqHq7aGYgg26Y1KpCuoNmZ1AECjWUkSJngBuAwRPV7d",
+    decimals: 9
   }
 ];
